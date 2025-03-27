@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/context/AuthContext';
 import { createUser, deleteUser, fetchUsers, updateUser } from '@/services/api';
 import { Sector, User, UserRole } from '@/types';
@@ -57,7 +56,7 @@ const UserManagement = () => {
         role = UserRole.ADMIN;
       }
       
-      const newUser = await createUser(name, email, password, sector, role === UserRole.SUPER_ADMIN);
+      const newUser = await createUser(name, email, password, sector, isSuperAdmin);
       
       setUsers(prev => [...prev, newUser]);
       resetForm();

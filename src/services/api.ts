@@ -30,14 +30,21 @@ export const fetchUser = async (id: string): Promise<User | undefined> => {
   return data as User;
 };
 
-export const createUser = async (user: Omit<User, 'id' | 'createdAt'>): Promise<User> => {
+export const createUser = async (name: string, email: string, password: string, sector: Sector, isSuperAdmin: boolean = false): Promise<User> => {
+  let role = UserRole.USER;
+  if (isSuperAdmin) {
+    role = UserRole.SUPER_ADMIN;
+  } else if (password === 'admin') { // Simple check for admin role
+    role = UserRole.ADMIN;
+  }
+
   const { data, error } = await supabase
     .from('users')
     .insert([{
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      sector: user.sector
+      name,
+      email,
+      role,
+      sector
     }])
     .select()
     .single();
