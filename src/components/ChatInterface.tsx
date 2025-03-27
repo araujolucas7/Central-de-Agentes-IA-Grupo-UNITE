@@ -1,9 +1,10 @@
 
 import { Agent, Message } from '@/types';
-import { sendMessageToAgent } from '@/services/api';
+import { sendMessageToAgent, fetchMessages } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { useLocation } from 'react-router-dom';
 
 interface ChatInterfaceProps {
   agent: Agent;
@@ -14,13 +15,20 @@ interface ChatInterfaceProps {
 export const ChatInterface = ({ 
   agent, 
   initialMessages = [], 
-  conversationId 
+  conversationId: initialConversationId 
 }: ChatInterfaceProps) => {
   const { user } = useAuth();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const queryConversationId = queryParams.get('conversation');
+  
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [currentConversationId, setCurrentConversationId] = useState<string | undefined>(conversationId);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [currentConversationId, setCurrentConversationId] = useState<string | undefined>(
+    initialConversationId || queryConversationId || undefined
+  );
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -37,6 +45,26 @@ export const ChatInterface = ({
     // Focus the input field when the component mounts
     inputRef.current?.focus();
   }, []);
+  
+  // Load messages if we have a conversation ID
+  useEffect(() => {
+    const loadMessages = async () => {
+      if (!currentConversationId || !user) return;
+      
+      try {
+        setIsLoadingMessages(true);
+        const messageData = await fetchMessages(currentConversationId);
+        setMessages(messageData);
+      } catch (error) {
+        console.error('Error loading messages:', error);
+        toast.error('Erro ao carregar mensagens');
+      } finally {
+        setIsLoadingMessages(false);
+      }
+    };
+    
+    loadMessages();
+  }, [currentConversationId, user]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +105,7 @@ export const ChatInterface = ({
         // Remove the temporary message
         const filtered = prev.filter(msg => msg.id !== tempUserMessage.id);
         // Add the real user message and agent response
-        return [...filtered, result.message];
+        return [...filtered, result.message, result.response];
       });
       
     } catch (error) {
@@ -115,7 +143,12 @@ export const ChatInterface = ({
       
       {/* Chat messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 subtle-scrollbar">
-        {messages.length === 0 ? (
+        {isLoadingMessages ? (
+          <div className="flex h-full flex-col items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-unite-200"></div>
+            <p className="mt-2 text-sm text-slate-500">Carregando mensagens...</p>
+          </div>
+        ) : messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
             <div className="rounded-full bg-unite-100/50 p-3">
               <svg

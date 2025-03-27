@@ -9,7 +9,134 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      agents: {
+        Row: {
+          avatar: string | null
+          description: string
+          id: string
+          name: string
+          sector: string
+          slug: string
+        }
+        Insert: {
+          avatar?: string | null
+          description: string
+          id?: string
+          name: string
+          sector: string
+          slug: string
+        }
+        Update: {
+          avatar?: string | null
+          description?: string
+          id?: string
+          name?: string
+          sector?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          agent_id: string
+          id: string
+          last_message_at: string
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          id?: string
+          last_message_at?: string
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          id?: string
+          last_message_at?: string
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          id: string
+          sender_id: string
+          sender_type: string
+          timestamp: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          id?: string
+          sender_id: string
+          sender_type: string
+          timestamp?: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          id?: string
+          sender_id?: string
+          sender_type?: string
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          role: string
+          sector: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          role: string
+          sector: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          role?: string
+          sector?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,122 +1,257 @@
 import { Agent, AgentStats, Conversation, Message, Sector, User, UserRole, UserStats } from '@/types';
-import { mockAgents, mockConversations, findUserByEmail, initialAdmin } from './mockData';
+import { initialAdmin } from './mockData';
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/integrations/supabase/client';
 
 // User API
 export const fetchUsers = async (): Promise<User[]> => {
-  return mockUsers;
+  const { data, error } = await supabase.from('users').select('*');
+  
+  if (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+  
+  return data as User[];
 };
 
 export const fetchUser = async (id: string): Promise<User | undefined> => {
-  return mockUsers.find(user => user.id === id);
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) {
+    console.error('Error fetching user:', error);
+    return undefined;
+  }
+  
+  return data as User;
 };
 
 export const createUser = async (user: Omit<User, 'id' | 'createdAt'>): Promise<User> => {
-  const newUser: User = {
-    id: uuidv4(),
-    createdAt: new Date().toISOString(),
-    ...user,
-  };
-  // In a real app, we would add this to the database
-  // mockUsers.push(newUser);
-  return newUser;
+  const { data, error } = await supabase
+    .from('users')
+    .insert([{
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      sector: user.sector
+    }])
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error creating user:', error);
+    throw error;
+  }
+  
+  return data as User;
 };
 
 export const updateUser = async (id: string, userData: Partial<User>): Promise<User | undefined> => {
-  const userIndex = mockUsers.findIndex(user => user.id === id);
-  if (userIndex === -1) return undefined;
+  const { data, error } = await supabase
+    .from('users')
+    .update(userData)
+    .eq('id', id)
+    .select()
+    .single();
   
-  const updatedUser = { ...mockUsers[userIndex], ...userData };
-  // In a real app, we would update this in the database
-  // mockUsers[userIndex] = updatedUser;
-  return updatedUser;
+  if (error) {
+    console.error('Error updating user:', error);
+    return undefined;
+  }
+  
+  return data as User;
 };
 
 export const deleteUser = async (id: string): Promise<boolean> => {
-  const userIndex = mockUsers.findIndex(user => user.id === id);
-  if (userIndex === -1) return false;
+  const { error } = await supabase
+    .from('users')
+    .delete()
+    .eq('id', id);
   
-  // In a real app, we would remove this from the database
-  // mockUsers.splice(userIndex, 1);
+  if (error) {
+    console.error('Error deleting user:', error);
+    return false;
+  }
+  
   return true;
 };
 
 // Agent API
 export const fetchAgents = async (): Promise<Agent[]> => {
-  return mockAgents;
+  const { data, error } = await supabase.from('agents').select('*');
+  
+  if (error) {
+    console.error('Error fetching agents:', error);
+    throw error;
+  }
+  
+  return data as Agent[];
 };
 
 export const getAllAgents = async (): Promise<Agent[]> => {
-  return mockAgents;
+  return fetchAgents();
 };
 
 export const fetchAgent = async (id: string): Promise<Agent | undefined> => {
-  return mockAgents.find(agent => agent.id === id);
+  const { data, error } = await supabase
+    .from('agents')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) {
+    console.error('Error fetching agent:', error);
+    return undefined;
+  }
+  
+  return data as Agent;
 };
 
 export const fetchAgentById = async (id: string): Promise<Agent | undefined> => {
-  return mockAgents.find(agent => agent.id === id);
+  return fetchAgent(id);
 };
 
 export const fetchAgentBySlug = async (slug: string): Promise<Agent | undefined> => {
-  return mockAgents.find(agent => agent.slug === slug);
+  const { data, error } = await supabase
+    .from('agents')
+    .select('*')
+    .eq('slug', slug)
+    .single();
+  
+  if (error) {
+    console.error('Error fetching agent by slug:', error);
+    return undefined;
+  }
+  
+  return data as Agent;
 };
 
 export const fetchAgentsBySector = async (sector: Sector): Promise<Agent[]> => {
-  return mockAgents.filter(agent => agent.sector === sector);
+  const { data, error } = await supabase
+    .from('agents')
+    .select('*')
+    .eq('sector', sector);
+  
+  if (error) {
+    console.error('Error fetching agents by sector:', error);
+    throw error;
+  }
+  
+  return data as Agent[];
 };
 
 export const createAgent = async (agent: Omit<Agent, 'id'>): Promise<Agent> => {
-  const newAgent: Agent = {
-    id: uuidv4(),
-    ...agent,
-  };
-  // In a real app, we would add this to the database
-  // mockAgents.push(newAgent);
-  return newAgent;
+  const { data, error } = await supabase
+    .from('agents')
+    .insert([{
+      name: agent.name,
+      description: agent.description,
+      sector: agent.sector,
+      slug: agent.slug,
+      avatar: agent.avatar
+    }])
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error creating agent:', error);
+    throw error;
+  }
+  
+  return data as Agent;
 };
 
 export const updateAgent = async (id: string, agentData: Partial<Agent>): Promise<Agent | undefined> => {
-  const agentIndex = mockAgents.findIndex(agent => agent.id === id);
-  if (agentIndex === -1) return undefined;
+  const { data, error } = await supabase
+    .from('agents')
+    .update(agentData)
+    .eq('id', id)
+    .select()
+    .single();
   
-  const updatedAgent = { ...mockAgents[agentIndex], ...agentData };
-  // In a real app, we would update this in the database
-  // mockAgents[agentIndex] = updatedAgent;
-  return updatedAgent;
+  if (error) {
+    console.error('Error updating agent:', error);
+    return undefined;
+  }
+  
+  return data as Agent;
 };
 
 export const deleteAgent = async (id: string): Promise<boolean> => {
-  const agentIndex = mockAgents.findIndex(agent => agent.id === id);
-  if (agentIndex === -1) return false;
+  const { error } = await supabase
+    .from('agents')
+    .delete()
+    .eq('id', id);
   
-  // In a real app, we would remove this from the database
-  // mockAgents.splice(agentIndex, 1);
+  if (error) {
+    console.error('Error deleting agent:', error);
+    return false;
+  }
+  
   return true;
 };
 
 // Conversation API
 export const fetchConversations = async (userId: string): Promise<Conversation[]> => {
-  return mockConversations.filter(conversation => conversation.userId === userId);
+  const { data, error } = await supabase
+    .from('conversations')
+    .select(`
+      *,
+      messages:messages(*)
+    `)
+    .eq('user_id', userId)
+    .order('last_message_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching conversations:', error);
+    throw error;
+  }
+  
+  return data as unknown as Conversation[];
 };
 
 export const fetchConversation = async (id: string): Promise<Conversation | undefined> => {
-  return mockConversations.find(conversation => conversation.id === id);
+  const { data, error } = await supabase
+    .from('conversations')
+    .select(`
+      *,
+      messages:messages(*)
+    `)
+    .eq('id', id)
+    .single();
+  
+  if (error) {
+    console.error('Error fetching conversation:', error);
+    return undefined;
+  }
+  
+  return data as unknown as Conversation;
 };
 
 export const createConversation = async (userId: string, agentId: string): Promise<Conversation> => {
   const now = new Date().toISOString();
-  const newConversation: Conversation = {
-    id: uuidv4(),
-    userId,
-    agentId,
-    messages: [],
-    startedAt: now,
-    lastMessageAt: now,
-  };
-  // In a real app, we would add this to the database
-  // mockConversations.push(newConversation);
-  return newConversation;
+  
+  const { data, error } = await supabase
+    .from('conversations')
+    .insert([{
+      user_id: userId,
+      agent_id: agentId,
+      started_at: now,
+      last_message_at: now
+    }])
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error creating conversation:', error);
+    throw error;
+  }
+  
+  return { ...data, messages: [] } as Conversation;
 };
 
 export const addMessageToConversation = async (
@@ -125,30 +260,50 @@ export const addMessageToConversation = async (
   senderId: string,
   senderType: 'user' | 'agent'
 ): Promise<Message | undefined> => {
-  const conversation = mockConversations.find(convo => convo.id === conversationId);
-  if (!conversation) return undefined;
+  // First, insert the message
+  const { data: messageData, error: messageError } = await supabase
+    .from('messages')
+    .insert([{
+      conversation_id: conversationId,
+      content,
+      sender_id: senderId,
+      sender_type: senderType
+    }])
+    .select()
+    .single();
   
-  const newMessage: Message = {
-    id: uuidv4(),
-    conversationId,
-    content,
-    senderId,
-    senderType,
-    timestamp: new Date().toISOString(),
-  };
+  if (messageError) {
+    console.error('Error adding message to conversation:', messageError);
+    return undefined;
+  }
   
-  // In a real app, we would add this to the database and update the conversation
-  // conversation.messages.push(newMessage);
-  // conversation.lastMessageAt = newMessage.timestamp;
+  // Then, update the conversation's last_message_at field
+  const { error: updateError } = await supabase
+    .from('conversations')
+    .update({ last_message_at: new Date().toISOString() })
+    .eq('id', conversationId);
   
-  return newMessage;
+  if (updateError) {
+    console.error('Error updating conversation last_message_at:', updateError);
+  }
+  
+  return messageData as Message;
 };
 
 // Message API
 export const fetchMessages = async (conversationId: string): Promise<Message[]> => {
-  const conversation = mockConversations.find(convo => convo.id === conversationId);
-  if (!conversation) return [];
-  return conversation.messages;
+  const { data, error } = await supabase
+    .from('messages')
+    .select('*')
+    .eq('conversation_id', conversationId)
+    .order('timestamp', { ascending: true });
+  
+  if (error) {
+    console.error('Error fetching messages:', error);
+    throw error;
+  }
+  
+  return data as Message[];
 };
 
 // Authentication API
@@ -158,8 +313,24 @@ export const login = async (email: string, password: string): Promise<User | nul
     return initialAdmin;
   }
   
-  const user = findUserByEmail(email);
-  return user || null;
+  // In a real app with Supabase auth, you would use:
+  // const { data, error } = await supabase.auth.signInWithPassword({
+  //   email,
+  //   password,
+  // });
+  
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('email', email)
+    .single();
+  
+  if (error) {
+    console.error('Error logging in:', error);
+    return null;
+  }
+  
+  return data as User;
 };
 
 // Helper function for Dashboard
@@ -188,13 +359,7 @@ export const sendMessageToAgent = async (
   message: string,
   conversationId?: string
 ): Promise<{response: Message, conversationId: string, message: Message}> => {
-  // In a real app, this would send a request to the agent webhook
-  // For now, we'll just simulate a response
-  
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Dummy response based on agent and message
+  // Get the agent
   const agent = await fetchAgentBySlug(slug);
   if (!agent) {
     throw new Error("Agent not found");
@@ -214,14 +379,16 @@ export const sendMessageToAgent = async (
   }
   
   // Create user message
-  const userMessage: Message = {
-    id: uuidv4(),
-    conversationId: convo.id,
-    content: message,
-    senderId: userId,
-    senderType: 'user',
-    timestamp: new Date().toISOString(),
-  };
+  const userMessage = await addMessageToConversation(
+    convo.id,
+    message,
+    userId,
+    'user'
+  );
+  
+  if (!userMessage) {
+    throw new Error("Failed to create user message");
+  }
   
   // Create a relevant response based on the agent's sector
   let responseText = `Como assistente do setor de ${agent?.sector || 'desconhecido'}, `;
@@ -254,14 +421,16 @@ export const sendMessageToAgent = async (
   }
   
   // Create agent response message
-  const agentResponseMessage: Message = {
-    id: uuidv4(),
-    conversationId: convo.id,
-    content: responseText,
-    senderId: agent.id,
-    senderType: 'agent',
-    timestamp: new Date().toISOString(),
-  };
+  const agentResponseMessage = await addMessageToConversation(
+    convo.id,
+    responseText,
+    agent.id,
+    'agent'
+  );
+  
+  if (!agentResponseMessage) {
+    throw new Error("Failed to create agent response message");
+  }
   
   return {
     response: agentResponseMessage,
@@ -273,33 +442,112 @@ export const sendMessageToAgent = async (
 // Statistics API
 export const getAgentStatistics = async (): Promise<AgentStats[]> => {
   // In a real app, this would query the database for usage statistics
-  // We'll generate some mock stats based on our agents
+  // For now, let's generate some statistics based on our database data
   
-  return mockAgents.map(agent => ({
-    agentId: agent.id,
-    agentName: agent.name,
-    totalConversations: Math.floor(Math.random() * 100),
-    totalMessages: Math.floor(Math.random() * 500),
-    averageMessagesPerConversation: Math.floor(Math.random() * 10) + 2,
-    userCount: Math.floor(Math.random() * 20) + 5,
-  }));
+  const agents = await fetchAgents();
+  const agentStats: AgentStats[] = [];
+  
+  for (const agent of agents) {
+    // Count conversations for this agent
+    const { count: totalConversations, error: convError } = await supabase
+      .from('conversations')
+      .select('*', { count: 'exact', head: true })
+      .eq('agent_id', agent.id);
+    
+    if (convError) {
+      console.error('Error counting conversations:', convError);
+      continue;
+    }
+    
+    // Count messages for this agent
+    const { count: totalMessages, error: msgError } = await supabase
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('sender_id', agent.id)
+      .eq('sender_type', 'agent');
+    
+    if (msgError) {
+      console.error('Error counting messages:', msgError);
+      continue;
+    }
+    
+    // Count unique users who have talked to this agent
+    const { data: uniqueUsers, error: userError } = await supabase
+      .from('conversations')
+      .select('user_id')
+      .eq('agent_id', agent.id);
+    
+    if (userError) {
+      console.error('Error counting unique users:', userError);
+      continue;
+    }
+    
+    const userSet = new Set(uniqueUsers.map(u => u.user_id));
+    
+    agentStats.push({
+      agentId: agent.id,
+      agentName: agent.name,
+      totalConversations: totalConversations || 0,
+      totalMessages: totalMessages || 0,
+      averageMessagesPerConversation: totalConversations ? (totalMessages || 0) / totalConversations : 0,
+      userCount: userSet.size
+    });
+  }
+  
+  return agentStats;
 };
 
 export const getUserStatistics = async (): Promise<UserStats[]> => {
   // In a real app, this would query the database for usage statistics
-  // We'll generate some mock stats based on our users
   
-  // Since we don't have mockUsers defined here directly, let's create simple mock stats
-  return [
-    {
-      userId: initialAdmin.id,
-      userName: initialAdmin.name,
-      totalConversations: Math.floor(Math.random() * 30),
-      totalMessages: Math.floor(Math.random() * 200),
-      agentsUsed: Math.floor(Math.random() * 5) + 1,
+  const users = await fetchUsers();
+  const userStats: UserStats[] = [];
+  
+  for (const user of users) {
+    // Count conversations for this user
+    const { count: totalConversations, error: convError } = await supabase
+      .from('conversations')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+    
+    if (convError) {
+      console.error('Error counting conversations:', convError);
+      continue;
     }
-  ];
+    
+    // Count messages for this user
+    const { count: totalMessages, error: msgError } = await supabase
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('sender_id', user.id)
+      .eq('sender_type', 'user');
+    
+    if (msgError) {
+      console.error('Error counting messages:', msgError);
+      continue;
+    }
+    
+    // Count unique agents this user has talked to
+    const { data: uniqueAgents, error: agentError } = await supabase
+      .from('conversations')
+      .select('agent_id')
+      .eq('user_id', user.id);
+    
+    if (agentError) {
+      console.error('Error counting unique agents:', agentError);
+      continue;
+    }
+    
+    const agentSet = new Set(uniqueAgents.map(a => a.agent_id));
+    
+    userStats.push({
+      userId: user.id,
+      userName: user.name,
+      totalConversations: totalConversations || 0,
+      totalMessages: totalMessages || 0,
+      agentsUsed: agentSet.size
+    });
+  }
+  
+  return userStats;
 };
-
-// Mock users data (should be imported from mockData.ts in a real implementation)
-const mockUsers = [initialAdmin];
