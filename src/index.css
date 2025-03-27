@@ -124,10 +124,6 @@
   .subtle-scrollbar {
     @apply scrollbar-thin scrollbar-thumb-unite-200/30 scrollbar-track-transparent;
   }
-  
-  .subtle-scrollbar:hover::-webkit-scrollbar-thumb {
-    background-color: rgba(155, 135, 245, 0.5);
-  }
 }
 
 /* Custom scrollbar */
@@ -144,4 +140,9 @@
   .scrollbar-track-transparent::-webkit-scrollbar-track {
     background-color: transparent;
   }
+}
+
+/* Add hover effect for scrollbar with standard CSS instead of Tailwind variant */
+.subtle-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(155, 135, 245, 0.5);
 }

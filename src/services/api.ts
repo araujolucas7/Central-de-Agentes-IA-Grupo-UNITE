@@ -1,6 +1,5 @@
-
 import { Agent, AgentStats, Conversation, Message, Sector, User, UserRole, UserStats } from '@/types';
-import { mockAgents, mockConversations, mockMessages, mockUsers } from './mockData';
+import { mockAgents, mockConversations, findUserByEmail, initialAdmin } from './mockData';
 import { v4 as uuidv4 } from 'uuid';
 
 // User API
@@ -147,15 +146,48 @@ export const addMessageToConversation = async (
 
 // Message API
 export const fetchMessages = async (conversationId: string): Promise<Message[]> => {
-  return mockMessages.filter(message => message.conversationId === conversationId);
+  const conversation = mockConversations.find(convo => convo.id === conversationId);
+  if (!conversation) return [];
+  return conversation.messages;
+};
+
+// Authentication API
+export const login = async (email: string, password: string): Promise<User | null> => {
+  // For demo purposes, let's use the findUserByEmail from mockData
+  if (email === initialAdmin.email && password === '12345') {
+    return initialAdmin;
+  }
+  
+  const user = findUserByEmail(email);
+  return user || null;
+};
+
+// Helper function for Dashboard
+export const fetchUserAgents = async (userId: string): Promise<Agent[]> => {
+  const user = await fetchUser(userId);
+  if (!user) return [];
+  
+  // If user is admin or super admin, return all agents
+  if (user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN) {
+    return getAllAgents();
+  }
+  
+  // Otherwise return agents for user's sector
+  return fetchAgentsBySector(user.sector);
+};
+
+// Helper function for ConversationList and Statistics
+export const fetchUserConversations = async (userId: string): Promise<Conversation[]> => {
+  return fetchConversations(userId);
 };
 
 // Send message to agent and get response
 export const sendMessageToAgent = async (
+  userId: string,
   slug: string,
-  conversationId: string,
-  message: string
-): Promise<{response: string, conversationId: string}> => {
+  message: string,
+  conversationId?: string
+): Promise<{response: Message, conversationId: string, message: Message}> => {
   // In a real app, this would send a request to the agent webhook
   // For now, we'll just simulate a response
   
@@ -164,40 +196,77 @@ export const sendMessageToAgent = async (
   
   // Dummy response based on agent and message
   const agent = await fetchAgentBySlug(slug);
+  if (!agent) {
+    throw new Error("Agent not found");
+  }
+  
+  // Create or get conversation
+  let convo: Conversation;
+  if (conversationId) {
+    const existingConvo = await fetchConversation(conversationId);
+    if (!existingConvo) {
+      convo = await createConversation(userId, agent.id);
+    } else {
+      convo = existingConvo;
+    }
+  } else {
+    convo = await createConversation(userId, agent.id);
+  }
+  
+  // Create user message
+  const userMessage: Message = {
+    id: uuidv4(),
+    conversationId: convo.id,
+    content: message,
+    senderId: userId,
+    senderType: 'user',
+    timestamp: new Date().toISOString(),
+  };
   
   // Create a relevant response based on the agent's sector
-  let response = `Como assistente do setor de ${agent?.sector || 'desconhecido'}, `;
+  let responseText = `Como assistente do setor de ${agent?.sector || 'desconhecido'}, `;
   
   if (agent?.sector === Sector.MARKETING) {
-    response += "posso ajudar com estratégias de marketing, campanhas e análise de concorrência.";
+    responseText += "posso ajudar com estratégias de marketing, campanhas e análise de concorrência.";
   } else if (agent?.sector === Sector.FINANCEIRO) {
-    response += "posso ajudar com relatórios financeiros, orçamentos e análise de fluxo de caixa.";
+    responseText += "posso ajudar com relatórios financeiros, orçamentos e análise de fluxo de caixa.";
   } else if (agent?.sector === Sector.RECURSOS_HUMANOS) {
-    response += "posso ajudar com processos de recrutamento, clima organizacional e planos de treinamento.";
+    responseText += "posso ajudar com processos de recrutamento, clima organizacional e planos de treinamento.";
   } else if (agent?.sector === Sector.OPERACOES) {
-    response += "posso ajudar com gestão de projetos, controle de qualidade e alocação de tarefas.";
+    responseText += "posso ajudar com gestão de projetos, controle de qualidade e alocação de tarefas.";
   } else if (agent?.sector === Sector.VENDAS) {
-    response += "posso ajudar com previsões de vendas, análise de leads e estratégias de vendas.";
+    responseText += "posso ajudar com previsões de vendas, análise de leads e estratégias de vendas.";
   } else if (agent?.sector === Sector.TECNOLOGIA) {
-    response += "posso ajudar com suporte técnico, documentação e resolução de incidentes.";
+    responseText += "posso ajudar com suporte técnico, documentação e resolução de incidentes.";
   } else {
-    response += "posso ajudar a responder suas perguntas e fornecer assistência.";
+    responseText += "posso ajudar a responder suas perguntas e fornecer assistência.";
   }
   
   // Add a contextual response to the user's message
   if (message.toLowerCase().includes('olá') || message.toLowerCase().includes('oi')) {
-    response = `Olá! ${response}`;
+    responseText = `Olá! ${responseText}`;
   } else if (message.toLowerCase().includes('ajuda')) {
-    response = `Claro, estou aqui para ajudar! ${response} Em que posso ser útil hoje?`;
+    responseText = `Claro, estou aqui para ajudar! ${responseText} Em que posso ser útil hoje?`;
   } else if (message.toLowerCase().includes('obrigado')) {
-    response = "De nada! Estou sempre à disposição para ajudar. Tem mais alguma questão?";
+    responseText = "De nada! Estou sempre à disposição para ajudar. Tem mais alguma questão?";
   } else {
-    response += " Vou analisar sua solicitação: \"" + message + "\" e voltar com uma resposta apropriada.";
+    responseText += " Vou analisar sua solicitação: \"" + message + "\" e voltar com uma resposta apropriada.";
   }
   
+  // Create agent response message
+  const agentResponseMessage: Message = {
+    id: uuidv4(),
+    conversationId: convo.id,
+    content: responseText,
+    senderId: agent.id,
+    senderType: 'agent',
+    timestamp: new Date().toISOString(),
+  };
+  
   return {
-    response,
-    conversationId,
+    response: agentResponseMessage,
+    conversationId: convo.id,
+    message: userMessage
   };
 };
 
@@ -220,11 +289,17 @@ export const getUserStatistics = async (): Promise<UserStats[]> => {
   // In a real app, this would query the database for usage statistics
   // We'll generate some mock stats based on our users
   
-  return mockUsers.map(user => ({
-    userId: user.id,
-    userName: user.name,
-    totalConversations: Math.floor(Math.random() * 30),
-    totalMessages: Math.floor(Math.random() * 200),
-    agentsUsed: Math.floor(Math.random() * 5) + 1,
-  }));
+  // Since we don't have mockUsers defined here directly, let's create simple mock stats
+  return [
+    {
+      userId: initialAdmin.id,
+      userName: initialAdmin.name,
+      totalConversations: Math.floor(Math.random() * 30),
+      totalMessages: Math.floor(Math.random() * 200),
+      agentsUsed: Math.floor(Math.random() * 5) + 1,
+    }
+  ];
 };
+
+// Mock users data (should be imported from mockData.ts in a real implementation)
+const mockUsers = [initialAdmin];

@@ -46,6 +46,23 @@ export const ChatInterface = ({
     try {
       setIsLoading(true);
       
+      // First create a temporary user message to show immediately
+      const tempUserMessage: Message = {
+        id: 'temp-' + Date.now(),
+        conversationId: currentConversationId || 'temp',
+        content: inputValue,
+        senderId: user.id,
+        senderType: 'user',
+        timestamp: new Date().toISOString(),
+      };
+      
+      // Add the temporary user message to the chat
+      setMessages(prev => [...prev, tempUserMessage]);
+      
+      // Clear the input
+      setInputValue('');
+      
+      // Send the message to the agent
       const result = await sendMessageToAgent(
         user.id,
         agent.slug,
@@ -55,11 +72,14 @@ export const ChatInterface = ({
       
       setCurrentConversationId(result.conversationId);
       
-      // Add the user message and agent response to the chat
-      setMessages(prev => [...prev, result.message, result.response]);
+      // Replace temporary message with real messages
+      setMessages(prev => {
+        // Remove the temporary message
+        const filtered = prev.filter(msg => msg.id !== tempUserMessage.id);
+        // Add the real user message and agent response
+        return [...filtered, result.message];
+      });
       
-      // Clear the input
-      setInputValue('');
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Erro ao enviar mensagem. Tente novamente.');
