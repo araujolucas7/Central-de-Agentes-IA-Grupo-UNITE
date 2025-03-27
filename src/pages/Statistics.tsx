@@ -145,21 +145,21 @@ const Statistics = () => {
     // Process conversations
     conversations.forEach(conversation => {
       // Update agent stats
-      const agentStat = agentStatsMap.get(conversation.agent_id);
+      const agentStat = agentStatsMap.get(conversation.agentId);
       if (agentStat) {
         agentStat.totalConversations++;
         agentStat.totalMessages += conversation.messages.length;
       }
       
       // Update user stats
-      const userStat = userStatsMap.get(conversation.user_id);
+      const userStat = userStatsMap.get(conversation.userId);
       if (userStat) {
         userStat.totalConversations++;
         userStat.totalMessages += conversation.messages.length;
       }
       
       // Update sector stats
-      const agent = agents.find(a => a.id === conversation.agent_id);
+      const agent = agents.find(a => a.id === conversation.agentId);
       if (agent) {
         const sectorStat = sectorStatsMap.get(agent.sector);
         if (sectorStat) {

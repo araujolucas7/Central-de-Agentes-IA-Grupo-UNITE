@@ -20,7 +20,7 @@ export interface User {
   email: string;
   role: UserRole;
   sector: Sector;
-  created_at: string; // Changed from createdAt to match database
+  createdAt: string;
 }
 
 export interface Agent {
@@ -34,20 +34,20 @@ export interface Agent {
 
 export interface Message {
   id: string;
-  conversation_id: string; // Changed from conversationId to match database
+  conversationId: string;
   content: string;
-  sender_id: string; // Changed from senderId to match database
-  sender_type: 'user' | 'agent'; // Changed from senderType to match database
+  senderId: string;
+  senderType: 'user' | 'agent';
   timestamp: string;
 }
 
 export interface Conversation {
   id: string;
-  user_id: string; // Changed from userId to match database
-  agent_id: string; // Changed from agentId to match database
+  userId: string;
+  agentId: string;
   messages: Message[];
-  started_at: string; // Changed from startedAt to match database
-  last_message_at: string; // Changed from lastMessageAt to match database
+  startedAt: string;
+  lastMessageAt: string;
 }
 
 export interface AgentStats {
