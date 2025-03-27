@@ -18,7 +18,9 @@ const Dashboard = () => {
       
       try {
         setLoading(true);
+        console.log("Fetching agents for user:", user.id);
         const userAgents = await fetchUserAgents(user.id);
+        console.log("Retrieved agents:", userAgents);
         setAgents(userAgents);
       } catch (error) {
         console.error('Error loading agents:', error);

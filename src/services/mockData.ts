@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Initial admin user for login
 export const initialAdmin: User = {
-  id: '1',
+  id: '00000000-0000-0000-0000-000000000000', // UUID válido para o admin
   name: 'Admin User',
   email: 'admin@example.com',
   role: UserRole.SUPER_ADMIN,
@@ -16,7 +16,7 @@ export const initialAdmin: User = {
 export const users: User[] = [
   initialAdmin,
   {
-    id: '2',
+    id: '11111111-1111-1111-1111-111111111111', // UUID válido
     name: 'Regular User',
     email: 'user@example.com',
     role: UserRole.USER,
@@ -24,7 +24,7 @@ export const users: User[] = [
     created_at: '2023-01-02T00:00:00Z'
   },
   {
-    id: '3',
+    id: '22222222-2222-2222-2222-222222222222', // UUID válido
     name: 'Manager User',
     email: 'manager@example.com',
     role: UserRole.ADMIN,
@@ -32,7 +32,7 @@ export const users: User[] = [
     created_at: '2023-01-03T00:00:00Z'
   },
   {
-    id: '4',
+    id: '33333333-3333-3333-3333-333333333333', // UUID válido
     name: 'HR User',
     email: 'hr@example.com',
     role: UserRole.USER,
@@ -96,34 +96,34 @@ export const agents: Agent[] = [
 // Mock messages
 export const messages: Message[] = [
   {
-    id: '1',
-    conversation_id: '1',
+    id: '11111111-0000-0000-0000-000000000000',
+    conversation_id: '11111111-0000-0000-0000-000000000000',
     content: 'Olá! Como posso ajudar com suas estratégias de marketing?',
-    sender_id: '1', // Marketing Expert agent
+    sender_id: '11111111-1111-1111-1111-111111111111',
     sender_type: 'agent',
     timestamp: '2023-05-01T10:00:00Z'
   },
   {
-    id: '2',
-    conversation_id: '1',
+    id: '22222222-0000-0000-0000-000000000000',
+    conversation_id: '11111111-0000-0000-0000-000000000000',
     content: 'Preciso de ajuda para criar uma campanha para um novo produto.',
-    sender_id: '2', // Regular User
+    sender_id: '11111111-1111-1111-1111-111111111111',
     sender_type: 'user',
     timestamp: '2023-05-01T10:05:00Z'
   },
   {
-    id: '3',
-    conversation_id: '1',
+    id: '33333333-0000-0000-0000-000000000000',
+    conversation_id: '11111111-0000-0000-0000-000000000000',
     content: 'Que tipo de produto você está lançando? Podemos começar definindo o público-alvo.',
-    sender_id: '1', // Marketing Expert agent
+    sender_id: '11111111-1111-1111-1111-111111111111',
     sender_type: 'agent',
     timestamp: '2023-05-01T10:10:00Z'
   },
   {
-    id: '4',
-    conversation_id: '1',
+    id: '44444444-0000-0000-0000-000000000000',
+    conversation_id: '11111111-0000-0000-0000-000000000000',
     content: 'É um aplicativo de produtividade para profissionais de marketing.',
-    sender_id: '2', // Regular User
+    sender_id: '11111111-1111-1111-1111-111111111111',
     sender_type: 'user',
     timestamp: '2023-05-01T10:15:00Z'
   }
@@ -132,10 +132,10 @@ export const messages: Message[] = [
 // Mock conversations
 export const conversations: Conversation[] = [
   {
-    id: '1',
-    user_id: '2', // Regular User
-    agent_id: '1', // Marketing Expert
-    messages: messages.filter(m => m.conversation_id === '1'),
+    id: '11111111-0000-0000-0000-000000000000',
+    user_id: '11111111-1111-1111-1111-111111111111',
+    agent_id: '11111111-1111-1111-1111-111111111111',
+    messages: messages.filter(m => m.conversation_id === '11111111-0000-0000-0000-000000000000'),
     started_at: '2023-05-01T10:00:00Z',
     last_message_at: '2023-05-01T10:15:00Z'
   }
