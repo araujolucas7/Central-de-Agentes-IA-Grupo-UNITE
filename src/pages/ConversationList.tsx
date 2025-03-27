@@ -24,10 +24,10 @@ const ConversationList = () => {
         // Load agent details for each conversation
         const agentMap: Record<string, Agent> = {};
         for (const conversation of data) {
-          if (!agentMap[conversation.agentId]) {
-            const agent = await fetchAgentById(conversation.agentId);
+          if (!agentMap[conversation.agent_id]) {
+            const agent = await fetchAgentById(conversation.agent_id);
             if (agent) {
-              agentMap[conversation.agentId] = agent;
+              agentMap[conversation.agent_id] = agent;
             }
           }
         }
@@ -98,7 +98,7 @@ const ConversationList = () => {
       ) : (
         <div className="space-y-4">
           {conversations.map((conversation) => {
-            const agent = agents[conversation.agentId];
+            const agent = agents[conversation.agent_id];
             if (!agent) return null;
             
             return (
@@ -120,7 +120,7 @@ const ConversationList = () => {
                         {agent.name}
                       </h3>
                       <span className="text-xs text-slate-500 dark:text-slate-400">
-                        {formatDate(conversation.lastMessageAt)}
+                        {formatDate(conversation.last_message_at)}
                       </span>
                     </div>
                     
