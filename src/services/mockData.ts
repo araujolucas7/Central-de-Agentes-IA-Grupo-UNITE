@@ -2,16 +2,19 @@
 import { Agent, Conversation, Message, Sector, User, UserRole } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
+// Initial admin user for login
+export const initialAdmin: User = {
+  id: '1',
+  name: 'Admin User',
+  email: 'admin@example.com',
+  role: UserRole.SUPER_ADMIN,
+  sector: Sector.TECNOLOGIA,
+  created_at: '2023-01-01T00:00:00Z'
+};
+
 // Mock users
 export const users: User[] = [
-  {
-    id: '1',
-    name: 'Admin User',
-    email: 'admin@example.com',
-    role: UserRole.SUPER_ADMIN,
-    sector: Sector.TECNOLOGIA,
-    created_at: '2023-01-01T00:00:00Z'
-  },
+  initialAdmin,
   {
     id: '2',
     name: 'Regular User',

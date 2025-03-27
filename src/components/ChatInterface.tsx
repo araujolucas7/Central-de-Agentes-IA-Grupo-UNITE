@@ -1,6 +1,5 @@
-
 import { useAuth } from '@/context/AuthContext';
-import { createMessage, fetchConversation, createConversation } from '@/services/api';
+import { addMessageToConversation, fetchConversation, createConversation } from '@/services/api';
 import { Agent, Message } from '@/types';
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -22,7 +21,6 @@ export const ChatInterface = ({ agent }: ChatInterfaceProps) => {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Extract conversation ID from URL query params if it exists
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const convId = queryParams.get('conversation');
@@ -31,13 +29,11 @@ export const ChatInterface = ({ agent }: ChatInterfaceProps) => {
       setConversationId(convId);
       loadExistingConversation(convId);
     } else {
-      // If no conversation ID in URL, reset the state
       setMessages([]);
       setConversationId(null);
     }
   }, [location.search]);
   
-  // Scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -70,32 +66,30 @@ export const ChatInterface = ({ agent }: ChatInterfaceProps) => {
     try {
       setLoading(true);
       
-      // If no conversation exists, create a new one
       let currentConversationId = conversationId;
       if (!currentConversationId) {
         const newConversation = await createConversation(user.id, agent.id);
         currentConversationId = newConversation.id;
         setConversationId(currentConversationId);
         
-        // Update URL with the new conversation ID without reloading the page
         navigate(`/chat/${agent.slug}?conversation=${currentConversationId}`, { replace: true });
       }
       
-      // Add user message
-      const userMessage = await createMessage({
-        conversation_id: currentConversationId,
-        content: newMessage,
-        sender_id: user.id,
-        sender_type: 'user',
-        timestamp: new Date().toISOString()
-      });
+      const userMessage = await addMessageToConversation(
+        currentConversationId,
+        newMessage,
+        user.id,
+        'user'
+      );
+      
+      if (!userMessage) {
+        throw new Error('Failed to send message');
+      }
       
       setMessages(prevMessages => [...prevMessages, userMessage]);
       setNewMessage('');
       
-      // Simulate agent response after a delay
       setTimeout(async () => {
-        // Generate a simple response based on the agent's sector
         let responseContent = '';
         
         switch (agent.sector) {
@@ -121,14 +115,16 @@ export const ChatInterface = ({ agent }: ChatInterfaceProps) => {
             responseContent = 'Compreendo sua questão. Estou analisando as possibilidades para fornecer a melhor resposta.';
         }
         
-        // Add agent response
-        const agentMessage = await createMessage({
-          conversation_id: currentConversationId,
-          content: responseContent,
-          sender_id: agent.id,
-          sender_type: 'agent',
-          timestamp: new Date().toISOString()
-        });
+        const agentMessage = await addMessageToConversation(
+          currentConversationId,
+          responseContent,
+          agent.id,
+          'agent'
+        );
+        
+        if (!agentMessage) {
+          throw new Error('Failed to receive agent response');
+        }
         
         setMessages(prevMessages => [...prevMessages, agentMessage]);
         setLoading(false);
@@ -150,7 +146,6 @@ export const ChatInterface = ({ agent }: ChatInterfaceProps) => {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Agent header */}
       <div className="border-b border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
         <div className="flex items-center">
           <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-unite-200 text-white">
@@ -169,7 +164,6 @@ export const ChatInterface = ({ agent }: ChatInterfaceProps) => {
         </div>
       </div>
       
-      {/* Messages area */}
       <div className="flex-1 overflow-y-auto bg-slate-50 p-4 dark:bg-slate-900/50">
         {loadingConversation ? (
           <div className="flex h-full items-center justify-center">
@@ -239,7 +233,6 @@ export const ChatInterface = ({ agent }: ChatInterfaceProps) => {
         )}
       </div>
       
-      {/* Input area */}
       <div className="border-t border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
         <div className="flex items-end gap-2">
           <textarea
